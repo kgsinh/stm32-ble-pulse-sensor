@@ -1,0 +1,41 @@
+# STM32CubeIDE
+.metadata/
+.settings/
+Debug/
+Release/
+
+# Build artifacts
+*.o
+*.elf
+*.bin
+*.hex
+*.map
+*.axf
+*.d
+*.lst
+*.dep
+*.tmp
+*.log
+*.bak
+*.swp
+*.swo
+*.ilk
+*.lib
+*.a
+*.dll
+*.exe
+*.out
+*.dmp
+*.obj
+*.pch
+*.pdb
+*.ipch
+*.tlog/
+
+# IDE files
+.project
+.cproject
+.launch
+.buildpath
+.settings/
+.vscode/
