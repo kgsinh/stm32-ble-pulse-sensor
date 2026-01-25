@@ -6,9 +6,9 @@
 #include "stm32f4xx_hal.h"
 
 // Pulse detection constants
-#define PULSE_THRESHOLD_RATIO 0.5f
+#define PULSE_THRESHOLD_RATIO 0.7f
 #define PULSE_HYSTERESIS 50
-#define BEAT_HISTORY_SIZE 8
+#define BEAT_HISTORY_SIZE 6
 #define SIGNAL_HISTORY_SIZE 20
 #define MIN_BEAT_INTERVAL_MS 333     // Max 180 BPM
 #define MAX_BEAT_INTERVAL_MS 1500    // Min 40 BPM
