@@ -1,10 +1,5 @@
 #include "services.h"
-#include "bluenrg1_types.h"
-#include "bluenrg1_gap.h"
-#include "bluenrg1_gatt_aci.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include "pulse_sensor.h"
+
 
 uint8_t HEALTH_SERVICE_UUID[16] = {0x00, 0x00, 0x18, 0x0F, 0x00, 0x10, 0x00, 0x80,
 						  	  	  0x00, 0x80, 0x5F, 0x9B, 0x34, 0xFB, 0x00, 0x00};
@@ -104,6 +99,12 @@ tBleStatus add_device_info_service(void)
     service_uuid.Service_UUID_16 = 0x180A; // Device Information Service
 
     ret = aci_gatt_add_service(UUID_TYPE_16, &service_uuid, PRIMARY_SERVICE, 4, &service_handle);
+
+    if (ret != BLE_STATUS_SUCCESS) {
+		printf("Error in aci_gatt_add_service (DIS): 0x%02X\r\n", ret);
+		return ret;
+	}
+
     return ret;
 }
 
@@ -117,9 +118,11 @@ void update_bpm_data(uint16_t *data, uint16_t length)
 									 0,
 									 length,
 									 (uint8_t *)data);
+
 	if (ret != BLE_STATUS_SUCCESS) {
 		printf("BPM DATA: Error in aci_gatt_update_char_value: 0x%02X\r\n", ret);
 	}
+
 }
 
 void update_temp_data(uint16_t *data, uint16_t length)
