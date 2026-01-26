@@ -299,6 +299,12 @@ Sending BPM: 70
 Beat! Interval: 845 ms, BPM: 71, Quality: 85
 Sending BPM: 71
 ```
+### BLE app Output
+
+```
+Received BPM Notification: 0x5500 (little-endian)
+BPM: 85
+```
 
 ### LED Indicators
 
