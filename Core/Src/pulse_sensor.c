@@ -1,7 +1,11 @@
 #include "pulse_sensor.h"
+#include <stdio.h>
 
+// Enhanced pulse detection constants
+#define DEBOUNCE_TIME_MS 100          // Prevent rapid false detections
+#define SIGNAL_UPDATE_INTERVAL_MS 2000 // Reset min/max every 2 seconds
 
-// Configuration constants
+// Enhanced state variables
 static uint16_t signal_min = 4095;
 static uint16_t signal_max = 0;
 static uint16_t signal_threshold = 2048;
@@ -36,8 +40,12 @@ void pulse_sensor_init(void) {
     signal_history_index = 0;
 
     // Clear arrays
-    memset(beat_intervals, 0, sizeof(beat_intervals));
-    memset(signal_history, 0, sizeof(signal_history));
+    for (int i = 0; i < BEAT_HISTORY_SIZE; i++) {
+        beat_intervals[i] = 0;
+    }
+    for (int i = 0; i < SIGNAL_HISTORY_SIZE; i++) {
+        signal_history[i] = 0;
+    }
 }
 
 void pulse_sensor_process(uint16_t adc_value) {
@@ -93,6 +101,45 @@ void pulse_sensor_process(uint16_t adc_value) {
     }
 }
 
+static void update_signal_bounds(uint16_t adc_value) {
+    uint32_t now = HAL_GetTick();
+
+    // Reset min/max periodically to adapt to lighting changes
+    if (now - last_threshold_update > SIGNAL_UPDATE_INTERVAL_MS) {
+        signal_min = 4095;
+        signal_max = 0;
+        last_threshold_update = now;
+    }
+
+    // Update bounds
+    if (adc_value < signal_min) {
+        signal_min = adc_value;
+    }
+    if (adc_value > signal_max) {
+        signal_max = adc_value;
+    }
+
+    // Calculate dynamic threshold
+    if (adc_value > signal_min) {
+        signal_threshold = signal_min + (uint16_t)((signal_max - signal_min) * PULSE_THRESHOLD_RATIO);
+    }
+}
+
+static void calculate_bpm(void) {
+    if (valid_beats < 3) return;
+
+    // Use the most recent intervals for averaging
+    uint8_t samples = (valid_beats < BEAT_HISTORY_SIZE) ? valid_beats : BEAT_HISTORY_SIZE;
+    uint32_t total = 0;
+
+    for (uint8_t i = 0; i < samples; i++) {
+        total += beat_intervals[i];
+    }
+
+    uint32_t avg_interval = total / samples;
+    current_bpm = (60000 / avg_interval);
+}
+
 bool pulse_sensor_beat_detected(void) {
     if (new_beat) {
         new_beat = false;
@@ -125,7 +172,7 @@ uint8_t get_signal_quality(void) {
     }
 }
 
-// Additional diagnostic functions
+// Helper functions for debugging
 uint16_t get_signal_amplitude(void) {
     return (signal_max > signal_min) ? (signal_max - signal_min) : 0;
 }
@@ -140,43 +187,4 @@ uint16_t get_signal_max(void) {
 
 uint16_t get_signal_threshold(void) {
     return signal_threshold;
-}
-
-static void calculate_bpm(void) {
-    if (valid_beats < 3) return;
-
-    // Use the most recent intervals for averaging
-    uint8_t samples = (valid_beats < BEAT_HISTORY_SIZE) ? valid_beats : BEAT_HISTORY_SIZE;
-    uint32_t total = 0;
-
-    for (uint8_t i = 0; i < samples; i++) {
-        total += beat_intervals[i];
-    }
-
-    uint32_t avg_interval = total / samples;
-    current_bpm = (60000 / avg_interval);
-}
-
-static void update_signal_bounds(uint16_t adc_value) {
-    uint32_t now = HAL_GetTick();
-
-    // Reset min/max periodically to adapt to lighting changes
-    if (now - last_threshold_update > SIGNAL_UPDATE_INTERVAL_MS) {
-        signal_min = 4095;
-        signal_max = 0;
-        last_threshold_update = now;
-    }
-
-    // Update bounds
-    if (adc_value < signal_min) {
-        signal_min = adc_value;
-    }
-    if (adc_value > signal_max) {
-        signal_max = adc_value;
-    }
-
-    // Calculate dynamic threshold
-    if (adc_value > signal_min) {
-        signal_threshold = signal_min + (uint16_t)((signal_max - signal_min) * PULSE_THRESHOLD_RATIO);
-    }
 }

@@ -1,15 +1,20 @@
-/**
- * @file app_bluenrg.c
- * @brief BlueNRG BLE Stack Application Implementation
- * @author STM32 BLE Pulse Sensor Project
- * @version 1.0
- *
- * This file implements the BlueNRG BLE stack initialization and processing
- * for the STM32 pulse sensor application. It handles device configuration,
- * GATT/GAP setup, and advertising management.
- */
-
 #include "app_bluenrg.h"
+#include "services.h"
+#include "bluenrg_conf.h"
+#include "bluenrg1_types.h"
+#include "bluenrg1_gap.h"
+#include "bluenrg1_aci.h"
+#include "bluenrg1_hci_le.h"
+#include "stdio.h"
+#include "stdlib.h"
+#include "hci.h"
+
+#define BDADDR_SIZE 6
+#define GAP_DEV_NAME_LEN 8
+#define ADV_INT_MIN 0x20 // 20 ms
+#define ADV_INT_MAX 0x40 // 40 ms
+
+
 
 uint8_t SERVER_BDADDR[] = {0x12, 0x34, 0x00, 0xE1, 0x80, 0x02};
 
@@ -89,34 +94,29 @@ void bluenrg_process(void)
     {
         advertising_started = 1;
 
-        /* Prepare advertising data with complete local name */
         uint8_t local_name[] = {
             sizeof("STM32BLE") + 1,
             AD_TYPE_COMPLETE_LOCAL_NAME,
             'S','T','M','3','2','B','L','E'
         };
 
-        /* Configure device as discoverable and connectable */
         ret = aci_gap_set_discoverable(
-            ADV_IND,                 // Advertising type (connectable undirected)
-            ADV_INT_MIN,			 // Minimum advertising interval
-            ADV_INT_MAX,			 // Maximum advertising interval
-            PUBLIC_ADDR,			 // Using public bluetooth address
-            NO_WHITE_LIST_USE,	     // No white list for filtering
-            sizeof(local_name),	   	 // Advertising data length
-            local_name,				 // Advertising data payload
-            0,						 // Scan response data length
-            NULL,  					 // Scan response data
-            0,	 					 // No slave connection interval min
-            0	 					 // No slave connection interval max
+            ADV_IND,
+            ADV_INT_MIN,
+            ADV_INT_MAX,
+            PUBLIC_ADDR,
+            NO_WHITE_LIST_USE,
+            sizeof(local_name),
+            local_name,
+            0,
+            NULL,
+            0,
+            0
         );
 
-        if (ret != BLE_STATUS_SUCCESS) {
-			printf("Error in aci_gap_set_discoverable: 0x%02X\r\n", ret);
-		}
+        printf("aci_gap_set_discoverable = 0x%02X\r\n", ret);
     }
 
-    /* Process HCI events */
     hci_user_evt_proc();
 }
 

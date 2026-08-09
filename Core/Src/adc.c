@@ -1,4 +1,11 @@
+#include "stm32f4xx.h"
+#include "stm32f4xx_hal.h"
 #include "adc.h"
+#include "pulse_sensor.h"
+
+#define GPIOAEN         (1U<<0)
+#define ADC1EN          (1U<<8)
+#define ADC_CH1         (1U<<1)
 
 void pa4_adc_init(void)
 {
